@@ -21,7 +21,7 @@ internal sealed class GetBookingQueryHandler : IQueryHandler<GetBookingQuery, Bo
         /* Tradeoff: Pragmatic
         * Using SQL to directly read model.
         * Downside: no completly abstracting our persisting concerns from the query handler
-        * SQL devs can define the read Views in the DB and you can consume them.
+        * SQL devs can define the read Views in the DB and you can consume them
         */
         const string sql = """
             SELECT
