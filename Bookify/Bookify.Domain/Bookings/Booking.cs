@@ -69,6 +69,7 @@ public sealed class Booking : Entity
 
         booking.RaiseDomainEvent(new BookingReservedDomainEvent(booking.Id));
 
+        // triggers an update on the apartments table for this specific row
         apartment.LastBookedOnUtc = utcNow;
 
         return booking;

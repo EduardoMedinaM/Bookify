@@ -23,21 +23,21 @@ public class LoggingBehavior<TRequest, TResponse> : IPipelineBehavior<TRequest, 
         RequestHandlerDelegate<TResponse> next,
         CancellationToken cancellationToken)
     {
-        var name = request.GetType().Name;
+        var command = request.GetType().Name;
 
         try
         {
-            _logger.LogInformation("Executing command {Command}", name);
+            _logger.LogInformation("Executing command {Command}", command);
 
             var result = await next();
 
-            _logger.LogInformation("Command {Command} processed successfully", name);
+            _logger.LogInformation("Command {Command} processed successfully", command);
 
             return result;
         }
         catch (Exception exception)
         {
-            _logger.LogError(exception, "Command {Command} processing failed", name);
+            _logger.LogError(exception, "Command {Command} processing failed", command);
 
             throw;
         }
