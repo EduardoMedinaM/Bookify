@@ -27,5 +27,7 @@ internal sealed class UserConfiguration : IEntityTypeConfiguration<User>
         // Defines Index on the email column. A unique index.
         // Guarantees the user by email will be unique across table
         builder.HasIndex(user => user.Email).IsUnique();
+
+        builder.HasIndex(user => user.IdentityId).IsUnique();
     }
 }
