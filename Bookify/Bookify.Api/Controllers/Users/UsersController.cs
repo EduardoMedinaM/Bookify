@@ -1,4 +1,5 @@
-﻿using Bookify.Application.Users.LogInUser;
+﻿using Bookify.Application.Users.GetLoggedInUser;
+using Bookify.Application.Users.LogInUser;
 using Bookify.Application.Users.RegisterUser;
 using MediatR;
 using Microsoft.AspNetCore.Authorization;
@@ -6,7 +7,7 @@ using Microsoft.AspNetCore.Mvc;
 
 namespace Bookify.Api.Controllers.Users
 {
-    [Route("api/[controller]")]
+    [Route("api/users")]
     [ApiController]
     public class UsersController : ControllerBase
     {
@@ -15,6 +16,15 @@ namespace Bookify.Api.Controllers.Users
         public UsersController(ISender sender)
         {
             _sender = sender;
+        }
+
+        [Authorize(Roles = Roles.Registered)]
+        [HttpGet("me")]
+        public async Task<IActionResult> GetLoggedInUser(CancellationToken cancellationToken)
+        {
+            var query = new GetLoggedInUserQuery();
+            var result = await _sender.Send(query, cancellationToken);
+            return Ok(result.Value);
         }
 
         [AllowAnonymous]
