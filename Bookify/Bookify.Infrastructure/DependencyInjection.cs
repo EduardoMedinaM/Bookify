@@ -84,11 +84,11 @@ public static class DependencyInjection
         })
             .AddHttpMessageHandler<AdminAuthorizationDelegatingHandler>();
 
-        //services.AddHttpClient<IJwtService, JwtService>((serviceProvider, httpClient) =>
-        //{
-        //    var keycloakOptions = serviceProvider.GetRequiredService<IOptions<KeycloakOptions>>().Value;
+        services.AddHttpClient<IJwtService, JwtService>((serviceProvider, httpClient) =>
+        {
+            var keycloakOptions = serviceProvider.GetRequiredService<IOptions<KeycloakOptions>>().Value;
 
-        //    httpClient.BaseAddress = new Uri(keycloakOptions.TokenUrl);
-        //});
+            httpClient.BaseAddress = new Uri(keycloakOptions.TokenUrl);
+        });
     }
 }
