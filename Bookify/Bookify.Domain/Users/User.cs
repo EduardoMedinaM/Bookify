@@ -24,7 +24,7 @@ public sealed class User : Entity
     }
 
     /*
-     *Entities are differenciated by a primary key (a unique identifier) 
+     *Entities are differentiated by a primary key (a unique identifier) 
      */
 
     public FirstName FirstName { get; private set; }
@@ -38,7 +38,7 @@ public sealed class User : Entity
     {
         /*
          * Benefits: 
-         * - hidding ctor to avoid exposing entity details
+         * - hiding ctor to avoid exposing entity details
          * - encapsulation
          * - to be able to introduce side effects that should not go on the ctor
          */

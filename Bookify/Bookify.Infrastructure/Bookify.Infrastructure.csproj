@@ -17,8 +17,4 @@
     <ProjectReference Include="..\Bookify.Application\Bookify.Application.csproj" />
   </ItemGroup>
 
-  <ItemGroup>
-    <Folder Include="Authorization\" />
-  </ItemGroup>
-
 </Project>
