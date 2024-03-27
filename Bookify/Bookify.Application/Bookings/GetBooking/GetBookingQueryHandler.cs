@@ -1,6 +1,8 @@
-﻿using Bookify.Application.Abstractions.Data;
+﻿using Bookify.Application.Abstractions.Authentication;
+using Bookify.Application.Abstractions.Data;
 using Bookify.Application.Abstractions.Messaging;
 using Bookify.Domain.Abstractions;
+using Bookify.Domain.Bookings;
 using Dapper;
 
 namespace Bookify.Application.Bookings.GetBooking;
@@ -8,10 +10,12 @@ namespace Bookify.Application.Bookings.GetBooking;
 internal sealed class GetBookingQueryHandler : IQueryHandler<GetBookingQuery, BookingResponse>
 {
     private readonly ISqlConnectionFactory _sqlConnectionFactory;
+    private readonly IUserContext _userContext;
 
-    public GetBookingQueryHandler(ISqlConnectionFactory sqlConnectionFactory)
+    public GetBookingQueryHandler(ISqlConnectionFactory sqlConnectionFactory, IUserContext userContext)
     {
         _sqlConnectionFactory = sqlConnectionFactory;
+        _userContext = userContext;
     }
 
     public async Task<Result<BookingResponse>> Handle(GetBookingQuery request, CancellationToken cancellationToken)
@@ -21,8 +25,12 @@ internal sealed class GetBookingQueryHandler : IQueryHandler<GetBookingQuery, Bo
         /* Tradeoff: Pragmatic
         * Using SQL to directly read model.
         * Downside: no completly abstracting our persisting concerns from the query handler
-        * SQL devs can define the read Views in the DB and you can consume them
+        * SQL devs can define the read Views in the DB and you can consume them.
+        * 
+        * Security: the UserId needs to match the user requesting the resource
         */
+
+
         const string sql = """
             SELECT
                 id AS Id,
@@ -46,10 +54,16 @@ internal sealed class GetBookingQueryHandler : IQueryHandler<GetBookingQuery, Bo
 
         var booking = await connection.QueryFirstOrDefaultAsync<BookingResponse>(
             sql,
-            new 
-            { 
-                request.BookingId 
+            new
+            {
+                request.BookingId
             });
+
+        // Resource-based Authorization
+        if (booking is null || booking.UserId != _userContext.UserId)
+        {
+            return Result.Failure<BookingResponse>(BookingErrors.NotFound);
+        }
 
         return booking;
     }
