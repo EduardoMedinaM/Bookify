@@ -20,6 +20,8 @@ using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Options;
 using Microsoft.AspNetCore.Authorization;
+using Bookify.Application.Abstractions.Caching;
+using Bookify.Infrastructure.Caching;
 
 namespace Bookify.Infrastructure;
 
@@ -38,6 +40,8 @@ public static class DependencyInjection
         AddAuthentication(services, configuration);
 
         AddAuthorization(services);
+
+        AddCaching(services, configuration);
 
         return services;
     }
@@ -110,5 +114,14 @@ public static class DependencyInjection
         services.AddTransient<IAuthorizationHandler, PermissionAuthorizationHandler>();
 
         services.AddTransient<IAuthorizationPolicyProvider, PermissionAuthorizationPolicyProvider>();
+    }
+
+    private static void AddCaching(IServiceCollection services, IConfiguration configuration)
+    {
+        var conenctionString = configuration.GetConnectionString("Cache") 
+            ?? throw new ArgumentNullException(nameof(configuration));
+
+        services.AddStackExchangeRedisCache(options => options.Configuration = conenctionString);
+        services.AddSingleton<ICacheService, CacheService>();
     }
 }
