@@ -17,6 +17,10 @@ internal sealed class RoleConfiguration : IEntityTypeConfiguration<Role>
             .HasMany(role => role.Users)
             .WithMany(user => user.Roles);
 
+        builder
+            .HasMany(role => role.Permissions)
+            .WithMany().UsingEntity<RolePermission>();
+
         // seeds Registered role as record
         builder.HasData(Role.Registered);
     }

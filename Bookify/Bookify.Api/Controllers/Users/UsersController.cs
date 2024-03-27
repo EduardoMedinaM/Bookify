@@ -1,6 +1,7 @@
 ﻿using Bookify.Application.Users.GetLoggedInUser;
 using Bookify.Application.Users.LogInUser;
 using Bookify.Application.Users.RegisterUser;
+using Bookify.Infrastructure.Authorization;
 using MediatR;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
@@ -18,8 +19,11 @@ namespace Bookify.Api.Controllers.Users
             _sender = sender;
         }
 
-        [Authorize(Roles = Roles.Registered)]
         [HttpGet("me")]
+        /* [Authorize(Roles = Roles.Registered)] -> permissions now are connected to permissions do 
+        * it does not makes sense to have both
+        */
+        [HasPermission(Permissions.UsersRead)]
         public async Task<IActionResult> GetLoggedInUser(CancellationToken cancellationToken)
         {
             var query = new GetLoggedInUserQuery();
@@ -27,8 +31,8 @@ namespace Bookify.Api.Controllers.Users
             return Ok(result.Value);
         }
 
-        [AllowAnonymous]
         [HttpPost("register")]
+        [AllowAnonymous]
         public async Task<IActionResult> Register(RegisterUserRequest request, CancellationToken cancellationToken)
         {
             var command = new RegisterUserCommand(
@@ -46,8 +50,8 @@ namespace Bookify.Api.Controllers.Users
             return Ok(result.Value);
         }
 
-        [AllowAnonymous]
         [HttpPost("login")]
+        [AllowAnonymous]
         public async Task<IActionResult> LogIn(LogInUserRequest request, CancellationToken cancellationToken)
         {
             var command = new LogInUserCommand(request.Email, request.Password);
