@@ -23,6 +23,8 @@ using Microsoft.AspNetCore.Authorization;
 using Bookify.Application.Abstractions.Caching;
 using Bookify.Infrastructure.Caching;
 using Asp.Versioning;
+using Bookify.Infrastructure.Outbox;
+using Quartz;
 
 namespace Bookify.Infrastructure;
 
@@ -47,6 +49,8 @@ public static class DependencyInjection
         AddHealthChecks(services, configuration);
 
         AddApiVersioning(services);
+
+        AddBackgroundJobs(services, configuration);
 
         return services;
     }
@@ -123,7 +127,7 @@ public static class DependencyInjection
 
     private static void AddCaching(IServiceCollection services, IConfiguration configuration)
     {
-        var conenctionString = configuration.GetConnectionString("Cache") 
+        var conenctionString = configuration.GetConnectionString("Cache")
             ?? throw new ArgumentNullException(nameof(configuration));
 
         services.AddStackExchangeRedisCache(options => options.Configuration = conenctionString);
@@ -154,5 +158,16 @@ public static class DependencyInjection
                 options.GroupNameFormat = "'v'V";
                 options.SubstituteApiVersionInUrl = true;
             });
+    }
+
+    private static void AddBackgroundJobs(IServiceCollection services, IConfiguration configuration)
+    {
+        services.Configure<OutboxOptions>(configuration.GetSection("Outbox"));
+
+        services.AddQuartz();
+
+        services.AddQuartzHostedService(options => options.WaitForJobsToComplete = true);
+
+        services.ConfigureOptions<ProcessOutboxMessagesJobSetup>();
     }
 }

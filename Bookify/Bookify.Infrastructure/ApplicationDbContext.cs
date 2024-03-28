@@ -1,18 +1,25 @@
-﻿using Bookify.Application.Exceptions;
+﻿using Bookify.Application.Abstractions.Clock;
+using Bookify.Application.Exceptions;
 using Bookify.Domain.Abstractions;
+using Bookify.Infrastructure.Outbox;
 using MediatR;
 using Microsoft.EntityFrameworkCore;
+using Newtonsoft.Json;
 
 namespace Bookify.Infrastructure
 {
     public sealed class ApplicationDbContext : DbContext, IUnitOfWork
     {
-        private readonly IPublisher _publisher;
+        private readonly IDateTimeProvider _dateTimeProvider;
 
-        public ApplicationDbContext(DbContextOptions options, IPublisher publisher) : base(options)
+        private static readonly JsonSerializerSettings _jsonSerializerSettings = new()
         {
-            _publisher = publisher;
+            TypeNameHandling = TypeNameHandling.All,
+        };
 
+        public ApplicationDbContext(DbContextOptions options, IDateTimeProvider dateTimeProvider) : base(options)
+        {
+            _dateTimeProvider = dateTimeProvider;
         }
 
         protected override void OnModelCreating(ModelBuilder modelBuilder)
@@ -25,6 +32,8 @@ namespace Bookify.Infrastructure
         public override async Task<int> SaveChangesAsync(CancellationToken cancellationToken = default)
         {
             /*
+             * Raises the DomainEvent. Remember an event is a "fact" something that already happened.
+             * When using PublishDomainEvenstAsync()
              * Caveat: 
              * First we are SavingChanges which is Atomic
              * Second we are publishing events which adds another transaction, the domain envent handlers
@@ -34,10 +43,15 @@ namespace Bookify.Infrastructure
              */
             try
             {
-                var result = await base.SaveChangesAsync(cancellationToken);
+                /*
+                 * Will be persisting everything in a single transaction which gives us atomic
+                 * guarantees because we are using SQL database.
+                 * So either all of the outbox messages are persisted together as part of our transaction
+                 * or nothing is persisted.
+                 */
+                AddDomainEventsAsOutboxMessages();
 
-                // Raises the DomainEvent. Remember an event is a "fact" something that already happened.
-                await PublishDomainEventsAsync();
+                var result = await base.SaveChangesAsync(cancellationToken);
 
                 return result;
 
@@ -48,9 +62,9 @@ namespace Bookify.Infrastructure
             }
         }
 
-        private async Task PublishDomainEventsAsync()
+        private void AddDomainEventsAsOutboxMessages()
         {
-            var domainEvents = ChangeTracker
+            var outboxMessages = ChangeTracker
                 // wraps the entity entries implementing Entity class
                 .Entries<Entity>()
                 .Select(entry => entry.Entity)
@@ -69,12 +83,15 @@ namespace Bookify.Infrastructure
 
                     return domainEvents;
                 })
+                .Select(domainEvent => new OutboxMessage(
+                    Guid.NewGuid(),
+                    _dateTimeProvider.UtcNow,
+                    domainEvent.GetType().Name,
+                    JsonConvert.SerializeObject(domainEvent, _jsonSerializerSettings)
+                    ))
                 .ToList();
 
-            foreach (var domainEvent in domainEvents)
-            {
-                await _publisher.Publish(domainEvent);
-            }
+            AddRange(outboxMessages);
         }
     }
 }

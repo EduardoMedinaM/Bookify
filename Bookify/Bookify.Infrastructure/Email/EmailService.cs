@@ -6,6 +6,7 @@ namespace Bookify.Infrastructure.Email
     {
         public Task SendAsync(Domain.Users.Email recipent, string subject, string body)
         {
+            throw new ApplicationException("Test Exception");
             return Task.CompletedTask;
         }
     }
