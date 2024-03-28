@@ -28,4 +28,8 @@
     <ProjectReference Include="..\Bookify.Infrastructure\Bookify.Infrastructure.csproj" />
   </ItemGroup>
 
+  <ItemGroup>
+    <Folder Include="Controllers\Reviews\" />
+  </ItemGroup>
+
 </Project>

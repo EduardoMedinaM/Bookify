@@ -1,4 +1,5 @@
-﻿using Bookify.Application.Users.GetLoggedInUser;
+﻿using Asp.Versioning;
+using Bookify.Application.Users.GetLoggedInUser;
 using Bookify.Application.Users.LogInUser;
 using Bookify.Application.Users.RegisterUser;
 using Bookify.Infrastructure.Authorization;
@@ -8,8 +9,10 @@ using Microsoft.AspNetCore.Mvc;
 
 namespace Bookify.Api.Controllers.Users
 {
-    [Route("api/users")]
     [ApiController]
+    [ApiVersion(ApiVersions.V1)]
+    //[ApiVersion(ApiVersions.V2)]
+    [Route("api/v{version:apiVersion}/users")]
     public class UsersController : ControllerBase
     {
         private readonly ISender _sender;
@@ -23,13 +26,27 @@ namespace Bookify.Api.Controllers.Users
         /* [Authorize(Roles = Roles.Registered)] -> permissions now are connected to permissions do 
         * it does not makes sense to have both
         */
+        // [MapToApiVersion(ApiVersions.V1)]
         [HasPermission(Permissions.UsersRead)]
-        public async Task<IActionResult> GetLoggedInUser(CancellationToken cancellationToken)
+        public async Task<IActionResult> GetLoggedInUserV1(CancellationToken cancellationToken)
         {
             var query = new GetLoggedInUserQuery();
             var result = await _sender.Send(query, cancellationToken);
             return Ok(result.Value);
         }
+
+        //[HttpGet("me")]
+        ///* [Authorize(Roles = Roles.Registered)] -> permissions now are connected to permissions do 
+        //* it does not makes sense to have both
+        //*/
+        //[MapToApiVersion(ApiVersions.V2)]
+        //[HasPermission(Permissions.UsersRead)]
+        //public async Task<IActionResult> GetLoggedInUserV2(CancellationToken cancellationToken)
+        //{
+        //    var query = new GetLoggedInUserQuery();
+        //    var result = await _sender.Send(query, cancellationToken);
+        //    return Ok(result.Value);
+        //}
 
         [HttpPost("register")]
         [AllowAnonymous]
