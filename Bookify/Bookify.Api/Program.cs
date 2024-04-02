@@ -43,8 +43,9 @@ if (app.Environment.IsDevelopment())
 
     app.ApplyMigrations();
 
-    //run once only
+    // run once only
     // REMARK: Uncomment if you want to seed initial data.
+    // if you are using unit tests uncomment this line to get seed data.
     app.SeedData();
 }
 
@@ -69,6 +70,8 @@ app.MapHealthChecks("health", new HealthCheckOptions
 });
 
 app.Run();
+
+public partial class Program;
 
 /*
  * In case you ned a custom health check...
